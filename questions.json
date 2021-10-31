@@ -30,7 +30,7 @@
 	"4": {
 		"text": {
 			"ok": "Thanks for checking in!",
-			"others": "Your trip is over! Please reply “ok” within 5 minutes so we know you’re okay. Or we will send an alert message to your emergency contact."
+			"others": "Your trip is over! Please reply ok within 5 minutes so we know you are okay. Or we will send an alert message to your emergency contact."
 		},
 		"next_question": "-1"
 	}
