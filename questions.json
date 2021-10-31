@@ -1,0 +1,37 @@
+{
+	"0": {
+		"text": "Hi there, welcome to the emergency alert app. To start with, we have two questions. (1/2) What’s your name?",
+		"logic": {
+			"exp_ans_type_pos": "text"
+		},
+		"next_question": "1"
+	},
+	"1": {
+		"text": "Thanks for the answer, one more question to go! (2/2) What’s your emergency contact’s number?",
+		"logic":{
+			"exp_ans_type_pos": "text"
+		},
+		"next_question": "2"
+	},
+	"2": {
+		"text": "Great, we are ready to go! Please let us know anytime you need to set an alarm!",
+		"logic": {
+			"exp_ans_type_pos": "text"
+		},
+		"next_question": "3"
+	},
+	"3": {
+		"text": "Be safe! The app will check up on you in the set time.",
+		"logic": {
+			"exp_ans_type_pos": "text"
+		},
+		"next_question": "4"
+	},
+	"4": {
+		"text": {
+			"ok": "Thanks for checking in!",
+			"others": "Your trip is over! Please reply “ok” within 5 minutes so we know you’re okay. Or we will send an alert message to your emergency contact."
+		},
+		"next_question": "-1"
+	}
+}
