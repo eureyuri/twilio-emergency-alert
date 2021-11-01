@@ -13,7 +13,7 @@ from firebase_admin import credentials, firestore
 # heroku ps:scale worker=1
 # heroku ps:scale beat=1
 
-# To stop
+## To stop
 # heroku ps:scale worker=0
 # heroku ps:scale beat=0
 
