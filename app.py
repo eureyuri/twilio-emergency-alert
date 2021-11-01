@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, session, render_template
 from twilio.twiml.messaging_response import MessagingResponse
 import json
+import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -8,8 +9,12 @@ app = Flask(__name__)
 app.secret_key = "super secret key"
 
 # Initialize Firestore DB
-### TODO: update the firebase key for emergency alert app
-cred = credentials.Certificate("twilio-hair-color-quiz-key.json")
+firebase_key = os.environ.get('FIREBASE_KEY', 'sms-emergency-alert-firebase-key.json')
+try:
+    cred = credentials.Certificate(json.loads(firebase_key))
+except json.decoder.JSONDecodeError:
+    cred = credentials.Certificate(firebase_key)
+
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 response_ref = db.collection('response')
@@ -24,7 +29,7 @@ def sms_reply():
     resp = MessagingResponse()
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
-    if req_body == "restart": # for testing purpose
+    if req_body == "restart":  # for testing purpose
         session.clear()
     # check if the user has already started a session
     if 'question_id' not in session:
