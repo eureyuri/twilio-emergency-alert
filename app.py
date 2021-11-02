@@ -2,11 +2,10 @@ import json
 import os
 from datetime import datetime, timedelta
 
-from flask import Flask, request, redirect, session, render_template
+from flask import Flask, request, session, render_template
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers.base import print_jobs
 from dotenv import load_dotenv
 import pandas as pd
 import firebase_admin
@@ -17,6 +16,7 @@ load_dotenv()
 # To stop
 # heroku ps:scale web=0
 
+JOB_ID = None
 
 app = Flask(__name__)
 app.secret_key = 'secret key'
@@ -28,6 +28,7 @@ from_number = os.environ.get('FROM')  # put your twilio number here'
 to_number = os.environ.get('TO')  # put your own phone number here
 
 scheduler = BackgroundScheduler(daemon=True)
+scheduler.start()
 
 # Initialize Firestore DB
 firebase_key = os.environ.get('FIREBASE_KEY', 'sms-emergency-alert-firebase-key.json')
@@ -47,6 +48,7 @@ with open('questions.json') as json_file:
 
 
 def emergency_check(emergency_number):
+    print('here')
     client.messages.create(
         body='new text',
         from_=from_number,
@@ -61,6 +63,7 @@ def index():
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
+    global JOB_ID
     resp = MessagingResponse()
 
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
@@ -83,17 +86,22 @@ def sms_reply():
             time_given = pd.to_datetime(req_body, format='%Hh%Mm')
             h = time_given.hour
             m = time_given.minute
-            time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
-            scheduler.start()
+            # time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
+            time_limit = datetime.utcnow() + timedelta(seconds=5)
+            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
+            print('added')
+            print(datetime.utcnow())
+            print(time_limit)
+            scheduler.print_jobs()
 
         # TODO: If question is 4 then cancel task
         if int(question_id) == 4:
             print('before')
-            print_jobs()
-            scheduler.remove_job('my_job_id')
+            scheduler.print_jobs()
+            # scheduler.remove_job('my_job_id')
+            JOB_ID.remove()
             print('after')
-            print_jobs()
+            scheduler.print_jobs()
             print('task removed')
 
         # TODO: If reminder goes off then send emergency alert
@@ -155,4 +163,3 @@ def user_details(user_id):
 
 if __name__ == "__main__":
     app.run(debug=True)
-    # app.start()
