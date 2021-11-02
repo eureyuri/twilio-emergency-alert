@@ -17,15 +17,15 @@ load_dotenv()
 # heroku ps:scale web=0
 
 JOB_ID = None
+EMERGENCY_JOB = None
 
 app = Flask(__name__)
 app.secret_key = 'secret key'
 
 account_sid = os.environ.get('SID')
 auth_token = os.environ.get('TOKEN')
+TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
 client = Client(account_sid, auth_token)
-from_number = os.environ.get('FROM')  # put your twilio number here'
-to_number = os.environ.get('TO')  # put your own phone number here
 
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.start()
@@ -47,12 +47,35 @@ with open('questions.json') as json_file:
     questions = json.load(json_file)
 
 
-def emergency_check(emergency_number):
-    print('here')
+def check_in(to, text):
+    global EMERGENCY_JOB
     client.messages.create(
-        body='new text',
-        from_=from_number,
+        body=text,
+        from_=TWILIO_NUMBER,
+        to=to
+    )
+
+    # FIXME
+    # time_limit = datetime.utcnow() + timedelta(minutes=5)
+    time_limit = datetime.utcnow() + timedelta(seconds=5)
+    EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
+                                      args=[to, session['emergency_number']],
+                                      trigger="date",
+                                      run_date=time_limit)
+
+
+def emergency_notice(my_number, emergency_number):
+    client.messages.create(
+        body='Hey, this is' + session['name'] + '. I went out but I might not have made it back safely. '
+                                                'Give me a call at' + my_number + '. (I used the emergency alert '
+                                                                                  'app to send this message.)',
+        from_=TWILIO_NUMBER,
         to=emergency_number
+    )
+    client.messages.create(
+        body='We have sent your emergency contact an alert message.',
+        from_=TWILIO_NUMBER,
+        to=my_number
     )
 
 
@@ -66,51 +89,54 @@ def sms_reply():
     global JOB_ID
     resp = MessagingResponse()
 
-    ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
+    # TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
 
     if req_body == "restart":  # for testing purpose
         session.clear()
+
     # check if the user has already started a session
     if 'question_id' not in session:
         # if the user doesn't have a session started, start them
         resp_txt = questions["0"]["text"]
         msg = resp.message(resp_txt)
         session['question_id'] = '1'
-        log_data_firestore('0', resp_txt, req_body)
+        session['from_number'] = '+1' + request.values.get('From')
     else:
         question_id = session['question_id']
+        resp_txt = questions[question_id]["text"]
+        log_txt = questions[str(int(question_id) - 1)]["text"]
 
-        # TODO: If question is 3 then set reminder + 5 min
-        if int(question_id) == 3:
+        if question_id == '1':
+            session['name'] = req_body
+        elif question_id == '2':
+            session['emergency_number'] = req_body
+        elif question_id == '3':
+            # Set reminder for when trip ends
             time_given = pd.to_datetime(req_body, format='%Hh%Mm')
             h = time_given.hour
             m = time_given.minute
-            # time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
+
+            # FIXME
+            time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
             time_limit = datetime.utcnow() + timedelta(seconds=5)
-            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
-            print('added')
-            print(datetime.utcnow())
-            print(time_limit)
-            scheduler.print_jobs()
-
-        # TODO: If question is 4 then cancel task
-        if int(question_id) == 4:
-            print('before')
-            scheduler.print_jobs()
-            # scheduler.remove_job('my_job_id')
-            JOB_ID.remove()
-            print('after')
-            scheduler.print_jobs()
-            print('task removed')
-
-        # TODO: If reminder goes off then send emergency alert
-
+            JOB_ID = scheduler.add_job(func=check_in,
+                                       args=[session['from_number'], resp_txt['check']],
+                                       trigger="date",
+                                       run_date=time_limit,
+                                       id='my_job_id')
+            resp_txt = resp_txt['resp']
+        elif question_id == '4':
+            # Cancel task
+            if len(scheduler.get_jobs()) > 0:
+                JOB_ID.remove()
+                resp_txt = resp_txt['ok']
+            # Cancel emergency contact
+            EMERGENCY_JOB.remove()
 
         # Send a response and log data
-        resp_txt = questions[question_id]["text"]
-        msg = resp.message(resp_txt)
-        log_data_firestore(question_id, resp_txt, req_body)
+        resp.message(resp_txt)
+        log_data_firestore(question_id, log_txt, req_body)
 
         next_id = questions[str(question_id)]["next_question"]
         session['question_id'] = next_id

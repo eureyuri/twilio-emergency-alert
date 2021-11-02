@@ -21,7 +21,10 @@
 		"next_question": "3"
 	},
 	"3": {
-		"text": "Be safe! The app will check up on you in the set time.",
+		"text": {
+			"resp": "Be safe! The app will check up on you in the set time.",
+			"check": "Your trip is over! Please reply ok within 5 minutes so we know you are okay. Or we will send an alert message to your emergency contact."
+		},
 		"logic": {
 			"exp_ans_type_pos": "text"
 		},
@@ -29,9 +32,8 @@
 	},
 	"4": {
 		"text": {
-			"ok": "Thanks for checking in!",
-			"others": "Your trip is over! Please reply ok within 5 minutes so we know you are okay. Or we will send an alert message to your emergency contact."
+			"ok": "Thanks for checking in!"
 		},
-		"next_question": "-1"
+		"next_question": "2"
 	}
 }
