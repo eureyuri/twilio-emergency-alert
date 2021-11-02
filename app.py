@@ -13,9 +13,6 @@ from firebase_admin import credentials, firestore
 
 load_dotenv()
 
-# To stop
-# heroku ps:scale web=0
-
 JOB_ID = None
 EMERGENCY_JOB = None
 
@@ -55,9 +52,8 @@ def check_in(name, to, emergency_number, text):
         to=to
     )
 
-    # FIXME
-    # time_limit = datetime.utcnow() + timedelta(minutes=5)
-    time_limit = datetime.utcnow() + timedelta(minutes=1)
+    # Text emergency after 5 min grace period
+    time_limit = datetime.utcnow() + timedelta(minutes=5)
     EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
                                       args=[name, to, emergency_number],
                                       trigger="date",
@@ -65,7 +61,6 @@ def check_in(name, to, emergency_number, text):
 
 
 def emergency_notice(name, my_number, emergency_number):
-    print('emergency!')
     client.messages.create(
         body='Hey, this is ' + name + '. I went out but I might not have made it back safely. '
                                       'Give me a call at ' + my_number + ' . (I used the emergency alert '
@@ -118,9 +113,7 @@ def sms_reply():
             h = time_given.hour
             m = time_given.minute
 
-            # FIXME
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            time_limit = datetime.utcnow() + timedelta(seconds=5)
             JOB_ID = scheduler.add_job(func=check_in,
                                        args=[session['name'], session['from_number'],
                                              session['emergency_number'], resp_txt['check']],
@@ -129,11 +122,16 @@ def sms_reply():
                                        id='my_job_id')
             resp_txt = resp_txt['resp']
         elif question_id == '4':
+            print('here')
+            print(JOB_ID)
+            print(EMERGENCY_JOB)
+
             # Cancel tasks
             if JOB_ID is not None:
                 JOB_ID.remove()
                 JOB_ID = None
             if EMERGENCY_JOB is not None:
+                # FIXME: Currently is not running this part (EMERGENCY_JOB is not properly assigned)
                 print('removing emergency job')
                 EMERGENCY_JOB.remove()
                 EMERGENCY_JOB = None
