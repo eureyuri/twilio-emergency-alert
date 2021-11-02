@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime, timedelta
-import atexit
 
 from flask import Flask, request, redirect, session, render_template
 from twilio.twiml.messaging_response import MessagingResponse
@@ -14,11 +13,8 @@ from firebase_admin import credentials, firestore
 
 load_dotenv()
 
-# To start
-# heroku ps:scale worker=1
-
 # To stop
-# heroku ps:scale worker=0
+# heroku ps:scale web=0
 
 
 app = Flask(__name__)
@@ -27,8 +23,8 @@ app.secret_key = 'secret key'
 account_sid = os.environ.get('SID')
 auth_token = os.environ.get('TOKEN')
 client = Client(account_sid, auth_token)
-from_number = '+13185366330'  # put your twilio number here'
-to_number = '+17818645196'  # put your own phone number here
+from_number = os.environ.get('FROM')  # put your twilio number here'
+to_number = os.environ.get('TO')  # put your own phone number here
 
 scheduler = BackgroundScheduler(daemon=True)
 
@@ -44,19 +40,18 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 response_ref = db.collection('response')
 
-### TODO: add logic in questions.json for negative responses (e.g., reply 0 while asked to choose in 1-4)
+
+# TODO: add logic in questions.json for negative responses (e.g., reply 0 while asked to choose in 1-4)
 with open('questions.json') as json_file:
     questions = json.load(json_file)
 
 
-def emergency_check():
+def emergency_check(emergency_number):
     client.messages.create(
         body='new text',
         from_=from_number,
-        to=to_number
+        to=emergency_number
     )
-
-    print("sending texts")
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -68,12 +63,18 @@ def index():
 def sms_reply():
     resp = MessagingResponse()
 
-    scheduler.add_job(func=emergency_check, trigger="interval", seconds=10)
-    scheduler.start()
-    atexit.register(lambda: scheduler.shutdown())
-
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
+
+    time_given = pd.to_datetime(req_body, format='%Hh%Mm')
+    print(time_given)
+    h = time_given.hour
+    m = time_given.minute
+    time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
+    job_id = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
+    scheduler.start()
+    job_id.remove()
+
     if req_body == "restart":  # for testing purpose
         session.clear()
     # check if the user has already started a session
@@ -93,7 +94,9 @@ def sms_reply():
             h = time_given.hour
             m = time_given.minute
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            emergency_check.apply_async(eta=time_limit)
+            job_id = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
+            scheduler.start()
+            job_id.remove()
 
         # TODO: If question is 4 then cancel task
         # TODO: If reminder goes off then send emergency alert
