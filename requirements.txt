@@ -1,4 +1,6 @@
 amqp==5.0.6
+APScheduler==3.8.1
+backports.zoneinfo==0.2.1
 billiard==3.6.4.0
 CacheControl==0.12.8
 cached-property==1.5.2
@@ -44,12 +46,16 @@ pyasn1-modules==0.2.8
 PyJWT==2.3.0
 pyparsing==2.4.7
 python-dateutil==2.8.2
+python-dotenv==0.19.1
 pytz==2021.3
+pytz-deprecation-shim==0.1.0.post0
 requests==2.26.0
 rsa==4.7.2
 six==1.16.0
 twilio==7.2.0
 typing-extensions==3.10.0.2
+tzdata==2021.5
+tzlocal==4.1
 uritemplate==4.1.1
 urllib3==1.26.7
 vine==5.0.0
