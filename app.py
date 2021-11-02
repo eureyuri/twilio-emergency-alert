@@ -55,7 +55,7 @@ def check_in(name, to, emergency_number, text):
     # Text emergency after 5 min grace period
     # FIXME
     # time_limit = datetime.utcnow() + timedelta(minutes=5)
-    time_limit = datetime.utcnow() + timedelta(minutes=1)
+    time_limit = datetime.utcnow() + timedelta(seconds=30)
     EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
                                       args=[name, to, emergency_number],
                                       trigger="date",
@@ -117,7 +117,7 @@ def sms_reply():
 
             # FIXME
             # time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            time_limit = datetime.utcnow() + timedelta(seconds=5)
+            time_limit = datetime.utcnow() + timedelta(seconds=30)
             JOB_ID = scheduler.add_job(func=check_in,
                                        args=[session['name'], session['from_number'],
                                              session['emergency_number'], resp_txt['check']],
