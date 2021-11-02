@@ -87,12 +87,14 @@ def sms_reply():
             h = time_given.hour
             m = time_given.minute
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
+            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
+            print(JOB_ID)
             scheduler.start()
 
         # TODO: If question is 4 then cancel task
         if int(question_id) == 4:
-            JOB_ID.remove()
+            print(JOB_ID)
+            scheduler.remove_job('my_job_id')
             print('task removed')
 
         # TODO: If reminder goes off then send emergency alert
