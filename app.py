@@ -17,6 +17,7 @@ from firebase_admin import credentials, firestore
 
 
 app = Flask(__name__)
+app.secret_key = 'secret key'
 app.config['CELERY_BROKER_URL'] = os.environ.get('CLOUDAMQP_URL')
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
