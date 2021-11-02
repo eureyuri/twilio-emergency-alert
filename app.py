@@ -1,13 +1,18 @@
 import json
 import os
 from datetime import datetime, timedelta
+import atexit
 
 from flask import Flask, request, redirect, session, render_template
 from twilio.twiml.messaging_response import MessagingResponse
-from celery import Celery
+from twilio.rest import Client
+from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
+
+load_dotenv()
 
 # To start
 # heroku ps:scale worker=1
@@ -18,10 +23,14 @@ from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 app.secret_key = 'secret key'
-app.config['CELERY_BROKER_URL'] = os.environ.get('CLOUDAMQP_URL')
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+account_sid = os.environ.get('SID')
+auth_token = os.environ.get('TOKEN')
+client = Client(account_sid, auth_token)
+from_number = '+13185366330'  # put your twilio number here'
+to_number = '+17818645196'  # put your own phone number here
+
+scheduler = BackgroundScheduler(daemon=True)
 
 
 # Initialize Firestore DB
@@ -40,10 +49,14 @@ with open('questions.json') as json_file:
     questions = json.load(json_file)
 
 
-@celery.task
 def emergency_check():
-    resp = MessagingResponse()
-    resp.message('Checking!')
+    client.messages.create(
+        body='new text',
+        from_=from_number,
+        to=to_number
+    )
+
+    print("sending texts")
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -55,8 +68,9 @@ def index():
 def sms_reply():
     resp = MessagingResponse()
 
-    time_limit = datetime.utcnow() + timedelta(hours=0, minutes=1)
-    task = emergency_check.apply_async(eta=time_limit)
+    scheduler.add_job(func=emergency_check, trigger="interval", seconds=10)
+    scheduler.start()
+    atexit.register(lambda: scheduler.shutdown())
 
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
