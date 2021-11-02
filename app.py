@@ -6,6 +6,7 @@ from flask import Flask, request, redirect, session, render_template
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.base import print_jobs
 from dotenv import load_dotenv
 import pandas as pd
 import firebase_admin
@@ -27,8 +28,6 @@ from_number = os.environ.get('FROM')  # put your twilio number here'
 to_number = os.environ.get('TO')  # put your own phone number here
 
 scheduler = BackgroundScheduler(daemon=True)
-JOB_ID = None
-
 
 # Initialize Firestore DB
 firebase_key = os.environ.get('FIREBASE_KEY', 'sms-emergency-alert-firebase-key.json')
@@ -62,7 +61,6 @@ def index():
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
-    global JOB_ID
     resp = MessagingResponse()
 
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
@@ -83,18 +81,19 @@ def sms_reply():
         # TODO: If question is 3 then set reminder + 5 min
         if int(question_id) == 3:
             time_given = pd.to_datetime(req_body, format='%Hh%Mm')
-            print(time_given)
             h = time_given.hour
             m = time_given.minute
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
-            print(JOB_ID)
+            scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit, id='my_job_id')
             scheduler.start()
 
         # TODO: If question is 4 then cancel task
         if int(question_id) == 4:
-            print(JOB_ID)
+            print('before')
+            print_jobs()
             scheduler.remove_job('my_job_id')
+            print('after')
+            print_jobs()
             print('task removed')
 
         # TODO: If reminder goes off then send emergency alert
