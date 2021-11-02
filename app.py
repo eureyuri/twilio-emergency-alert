@@ -101,7 +101,7 @@ def sms_reply():
         resp_txt = questions["0"]["text"]
         msg = resp.message(resp_txt)
         session['question_id'] = '1'
-        session['from_number'] = '+1' + request.values.get('From')
+        session['from_number'] = request.values.get('From')
     else:
         question_id = session['question_id']
         resp_txt = questions[question_id]["text"]
