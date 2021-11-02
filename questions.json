@@ -31,9 +31,7 @@
 		"next_question": "4"
 	},
 	"4": {
-		"text": {
-			"ok": "Thanks for checking in!"
-		},
+		"text": "Thanks for checking in!",
 		"next_question": "2"
 	}
 }

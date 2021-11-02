@@ -57,7 +57,7 @@ def check_in(name, to, emergency_number, text):
 
     # FIXME
     # time_limit = datetime.utcnow() + timedelta(minutes=5)
-    time_limit = datetime.utcnow() + timedelta(seconds=5)
+    time_limit = datetime.utcnow() + timedelta(minutes=1)
     EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
                                       args=[name, to, emergency_number],
                                       trigger="date",
@@ -66,9 +66,9 @@ def check_in(name, to, emergency_number, text):
 
 def emergency_notice(name, my_number, emergency_number):
     client.messages.create(
-        body='Hey, this is' + name + '. I went out but I might not have made it back safely. '
-                                     'Give me a call at' + my_number + '. (I used the emergency alert '
-                                                                       'app to send this message.)',
+        body='Hey, this is ' + name + '. I went out but I might not have made it back safely. '
+                                      'Give me a call at ' + my_number + ' . (I used the emergency alert '
+                                                                         'app to send this message.)',
         from_=TWILIO_NUMBER,
         to=emergency_number
     )
@@ -86,7 +86,7 @@ def index():
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
-    global JOB_ID
+    global JOB_ID, EMERGENCY_JOB
     resp = MessagingResponse()
 
     # TODO: cover edge cases of return after completion (lead to key error -1 for now)
@@ -128,12 +128,13 @@ def sms_reply():
                                        id='my_job_id')
             resp_txt = resp_txt['resp']
         elif question_id == '4':
-            # Cancel task
-            if len(scheduler.get_jobs()) > 0:
+            # Cancel tasks
+            if JOB_ID is not None:
                 JOB_ID.remove()
-                resp_txt = resp_txt['ok']
-            # Cancel emergency contact
-            EMERGENCY_JOB.remove()
+                JOB_ID = None
+            if EMERGENCY_JOB is not None:
+                EMERGENCY_JOB.remove()
+                EMERGENCY_JOB = None
 
         # Send a response and log data
         resp.message(resp_txt)
