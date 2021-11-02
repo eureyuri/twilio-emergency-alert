@@ -31,7 +31,7 @@
 		"next_question": "4"
 	},
 	"4": {
-		"text": "Thanks for checking in!",
+		"text": "Thanks for checking in! Text us again for another trip!",
 		"next_question": "2"
 	}
 }

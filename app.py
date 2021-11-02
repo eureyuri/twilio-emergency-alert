@@ -65,6 +65,7 @@ def check_in(name, to, emergency_number, text):
 
 
 def emergency_notice(name, my_number, emergency_number):
+    print('emergency!')
     client.messages.create(
         body='Hey, this is ' + name + '. I went out but I might not have made it back safely. '
                                       'Give me a call at ' + my_number + ' . (I used the emergency alert '
@@ -133,6 +134,7 @@ def sms_reply():
                 JOB_ID.remove()
                 JOB_ID = None
             if EMERGENCY_JOB is not None:
+                print('removing emergency job')
                 EMERGENCY_JOB.remove()
                 EMERGENCY_JOB = None
 
