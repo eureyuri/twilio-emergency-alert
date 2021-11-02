@@ -11,15 +11,12 @@ from firebase_admin import credentials, firestore
 
 # To start
 # heroku ps:scale worker=1
-# heroku ps:scale beat=1
 
-## To stop
+# To stop
 # heroku ps:scale worker=0
-# heroku ps:scale beat=0
 
 
 app = Flask(__name__)
-app.secret_key = "super secret key"
 app.config['CELERY_BROKER_URL'] = os.environ.get('CLOUDAMQP_URL')
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
@@ -58,7 +55,7 @@ def sms_reply():
     resp = MessagingResponse()
 
     time_limit = datetime.utcnow() + timedelta(hours=0, minutes=1)
-    emergency_check.apply_async(eta=time_limit)
+    task = emergency_check.apply_async(eta=time_limit)
 
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
