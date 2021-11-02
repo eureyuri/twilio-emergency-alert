@@ -47,7 +47,7 @@ with open('questions.json') as json_file:
     questions = json.load(json_file)
 
 
-def check_in(to, text):
+def check_in(name, to, emergency_number, text):
     global EMERGENCY_JOB
     client.messages.create(
         body=text,
@@ -59,16 +59,16 @@ def check_in(to, text):
     # time_limit = datetime.utcnow() + timedelta(minutes=5)
     time_limit = datetime.utcnow() + timedelta(seconds=5)
     EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
-                                      args=[to, session['emergency_number']],
+                                      args=[name, to, emergency_number],
                                       trigger="date",
                                       run_date=time_limit)
 
 
-def emergency_notice(my_number, emergency_number):
+def emergency_notice(name, my_number, emergency_number):
     client.messages.create(
-        body='Hey, this is' + session['name'] + '. I went out but I might not have made it back safely. '
-                                                'Give me a call at' + my_number + '. (I used the emergency alert '
-                                                                                  'app to send this message.)',
+        body='Hey, this is' + name + '. I went out but I might not have made it back safely. '
+                                     'Give me a call at' + my_number + '. (I used the emergency alert '
+                                                                       'app to send this message.)',
         from_=TWILIO_NUMBER,
         to=emergency_number
     )
@@ -121,7 +121,8 @@ def sms_reply():
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
             time_limit = datetime.utcnow() + timedelta(seconds=5)
             JOB_ID = scheduler.add_job(func=check_in,
-                                       args=[session['from_number'], resp_txt['check']],
+                                       args=[session['name'], session['from_number'],
+                                             session['emergency_number'], resp_txt['check']],
                                        trigger="date",
                                        run_date=time_limit,
                                        id='my_job_id')
