@@ -27,6 +27,7 @@ from_number = os.environ.get('FROM')  # put your twilio number here'
 to_number = os.environ.get('TO')  # put your own phone number here
 
 scheduler = BackgroundScheduler(daemon=True)
+JOB_ID = None
 
 
 # Initialize Firestore DB
@@ -61,19 +62,11 @@ def index():
 
 @app.route("/sms", methods=['GET', 'POST'])
 def sms_reply():
+    global JOB_ID
     resp = MessagingResponse()
 
     ### TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
-
-    time_given = pd.to_datetime(req_body, format='%Hh%Mm')
-    print(time_given)
-    h = time_given.hour
-    m = time_given.minute
-    time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-    job_id = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
-    scheduler.start()
-    job_id.remove()
 
     if req_body == "restart":  # for testing purpose
         session.clear()
@@ -88,17 +81,20 @@ def sms_reply():
         question_id = session['question_id']
 
         # TODO: If question is 3 then set reminder + 5 min
-        if int(question_id) is 3:
+        if int(question_id) == 3:
             time_given = pd.to_datetime(req_body, format='%Hh%Mm')
             print(time_given)
             h = time_given.hour
             m = time_given.minute
             time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            job_id = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
+            JOB_ID = scheduler.add_job(func=emergency_check, args=[to_number], trigger="date", run_date=time_limit)
             scheduler.start()
-            job_id.remove()
 
         # TODO: If question is 4 then cancel task
+        if int(question_id) == 4:
+            JOB_ID.remove()
+            print('task removed')
+
         # TODO: If reminder goes off then send emergency alert
 
 
