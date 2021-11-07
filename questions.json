@@ -33,5 +33,12 @@
 	"4": {
 		"text": "Thanks for checking in! Text us again for another trip!",
 		"next_question": "2"
+	},
+	"-1": {
+		"text": "Please resend your estimated out time in xhxm (e.g., 0h15m)",
+		"logic": {
+			"exp_ans_type_pos": "text"
+		},
+		"next_question": "3"
 	}
 }
