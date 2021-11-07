@@ -103,28 +103,47 @@ def sms_reply():
     else:
         question_id = session['question_id']
         resp_txt = questions[question_id]["text"]
-        log_txt = questions[str(int(question_id) - 1)]["text"]
+        if question_id != '-1':
+            log_txt = questions[str(int(question_id) - 1)]["text"]
+        else:
+            log_txt = questions["2"]["text"]
 
         if question_id == '1':
             session['name'] = req_body
         elif question_id == '2':
-            session['emergency_number'] = req_body
+            # check if the input is a 10-digit number
+            if req_body.isnumeric() and len(req_body) == 10:
+                session['emergency_number'] = req_body
+            # if not, send the same question again until get the right info
+            else:
+                question_id = '1'
+                resp_txt = questions[question_id]["text"]
+                log_txt = questions[str(int(question_id) - 1)]["text"]
         elif question_id == '3':
             # Set reminder for when trip ends
-            time_given = pd.to_datetime(req_body, format='%Hh%Mm')
-            h = time_given.hour
-            m = time_given.minute
+            try:
+                time_given = pd.to_datetime(req_body, format='%Hh%Mm')
+                h = time_given.hour
+                m = time_given.minute
 
-            # FIXME
-            # time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
-            time_limit = datetime.utcnow() + timedelta(seconds=30)
-            JOB_ID = scheduler.add_job(func=check_in,
-                                       args=[session['name'], session['from_number'],
-                                             session['emergency_number'], resp_txt['check']],
-                                       trigger="date",
-                                       run_date=time_limit,
-                                       id='my_job_id')
-            resp_txt = resp_txt['resp']
+                # FIXME
+                # time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
+                time_limit = datetime.utcnow() + timedelta(seconds=30)
+                JOB_ID = scheduler.add_job(func=check_in,
+                                           args=[session['name'], session['from_number'],
+                                                 session['emergency_number'], resp_txt['check']],
+                                           trigger="date",
+                                           run_date=time_limit,
+                                           id='my_job_id')
+                resp_txt = resp_txt['resp']
+            # if set time not in right format, send the 'xhxm' reminder until get the right info
+            except (TypeError, ValueError) as e:
+                question_id = '-1'
+                resp_txt = questions[question_id]["text"]
+                resp.message(resp_txt)
+                log_data_firestore(question_id, log_txt, req_body)
+                session['question_id'] = '3'
+                return str(resp)
         elif question_id == '4':
             print('here')
             print(JOB_ID)
