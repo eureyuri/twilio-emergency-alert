@@ -22,7 +22,7 @@
 	},
 	"3": {
 		"text": {
-			"resp": "Be safe! The app will check up on you in the set time.",
+			"resp": "Be safe! The app will check up on you in the set time. If you end your trip earlier, let us know that you are done!",
 			"check": "Your trip is over! Please reply ok within 5 minutes so we know you are okay. Or we will send an alert message to your emergency contact."
 		},
 		"logic": {
