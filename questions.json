@@ -1,20 +1,20 @@
 {
 	"0": {
-		"text": "Hi there, welcome to the emergency alert app. To start with, we have two questions. (1/2) What’s your name?",
+		"text": "Hi there, welcome to the EAS - an emergency alert app. To start with, we have two questions. (1/2) What’s your name?",
 		"logic": {
 			"exp_ans_type_pos": "text"
 		},
 		"next_question": "1"
 	},
 	"1": {
-		"text": "Thanks for the answer, one more question to go! (2/2) What’s your emergency contact’s number?",
+		"text": "Thanks for the answer, one more question to go! (2/2) What’s your emergency contact’s phone number that we could reach if you're in danger?",
 		"logic":{
 			"exp_ans_type_pos": "text"
 		},
 		"next_question": "2"
 	},
 	"2": {
-		"text": "Great, we are ready to go! Please let us know anytime you need to set an alarm!",
+		"text": "Great, we are ready to go! Please let us know anytime you need to set an alarm! To set an alarm, text us an estimated travel time in the form of xhym. For example, 20 minutes would be 0h20m",
 		"logic": {
 			"exp_ans_type_pos": "text"
 		},
