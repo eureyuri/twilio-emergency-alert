@@ -89,7 +89,8 @@ def sms_reply():
     # TODO: cover edge cases of return after completion (lead to key error -1 for now)
     req_body = request.values.get('Body')
 
-    if req_body == "restart":  # for testing purpose
+    # make "restart" case insenstive
+    if req_body.lower() == "restart":  # for testing purpose
         session.clear()
 
     # check if the user has already started a session
@@ -113,6 +114,12 @@ def sms_reply():
             # check if the input is a 10-digit number
             if req_body.isnumeric() and len(req_body) == 10:
                 session['emergency_number'] = req_body
+                # send set up notice to emergency contact
+                client.messages.create(
+                    body='Hey, this is emergency alert app. ' + session['name'] + ' has set you as an emergency contact. You may receive alert message from us in the future and please whitelist our number (318-536-6330).'
+                    from_=TWILIO_NUMBER,
+                    to=session['emergency_number'] 
+                )
             # if not, send the same question again until get the right info
             else:
                 question_id = '1'
@@ -121,10 +128,22 @@ def sms_reply():
         elif question_id == '3':
             # Set reminder for when trip ends
             try:
-                time_given = pd.to_datetime(req_body, format='%Hh%Mm')
-                h = time_given.hour
-                m = time_given.minute
-
+                req_body = req_body.lower() # case insensitive
+                # "30min"
+                if 'min' in req_body and 'h' not in req_body:
+                    time_given = pd.to_datetime(req_body, format='%Mmin')
+                    h = 0
+                    m = time_given.minute
+                # "30m"
+                elif 'm' in req_body and 'h' not in req_body:
+                    time_given = pd.to_datetime(req_body, format='%Mm')
+                    h = 0
+                    m = time_given.minute
+                # "1h30m"
+                else:
+                    time_given = pd.to_datetime(req_body, format='%Hh%Mm')
+                    h = time_given.hour
+                    m = time_given.minute
                 # FIXME
                 time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
                 # time_limit = datetime.utcnow() + timedelta(seconds=30)
@@ -135,7 +154,7 @@ def sms_reply():
                                            run_date=time_limit,
                                            id='my_job_id')
                 resp_txt = resp_txt['resp']
-            # if set time not in right format, send the 'xhxm' reminder until get the right info
+            # if set time not in right format, send the reminder until get the right info
             except (TypeError, ValueError) as e:
                 question_id = '-1'
                 resp_txt = questions[question_id]["text"]
