@@ -5,6 +5,7 @@ __pycache__/
 
 .idea/
 sms-emergency-alert-firebase-key.json
+.DS_Store
 
 # C extensions
 *.so

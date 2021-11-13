@@ -87,9 +87,10 @@ def sms_reply():
     resp = MessagingResponse()
 
     # TODO: cover edge cases of return after completion (lead to key error -1 for now)
-    req_body = request.values.get('Body')
+    # remove leading and trailing white spaces
+    req_body = request.values.get('Body').strip()
 
-    # make "restart" case insenstive
+    # make "restart" case insensitive
     if req_body.lower() == "restart":  # for testing purpose
         session.clear()
 
@@ -116,7 +117,11 @@ def sms_reply():
                 session['emergency_number'] = req_body
                 # send set up notice to emergency contact
                 client.messages.create(
-                    body='Hey, this is emergency alert app. ' + session['name'] + ' has set you as an emergency contact. You may receive alert message from us in the future and please whitelist our number (318-536-6330).'
+                    body='Hey, this is emergency alert app. ' + session['name'] + ' has set you as an emergency '
+                                                                                  'contact. You may receive alert '
+                                                                                  'message from us in the future and '
+                                                                                  'please whitelist our number '
+                                                                                  '(318-536-6330).',
                     from_=TWILIO_NUMBER,
                     to=session['emergency_number'] 
                 )
@@ -128,7 +133,7 @@ def sms_reply():
         elif question_id == '3':
             # Set reminder for when trip ends
             try:
-                req_body = req_body.lower() # case insensitive
+                req_body = req_body.lower()  # case insensitive
                 # "30min"
                 if 'min' in req_body and 'h' not in req_body:
                     time_given = pd.to_datetime(req_body, format='%Mmin')
@@ -144,9 +149,10 @@ def sms_reply():
                     time_given = pd.to_datetime(req_body, format='%Hh%Mm')
                     h = time_given.hour
                     m = time_given.minute
-                # FIXME
+
                 time_limit = datetime.utcnow() + timedelta(hours=h, minutes=m)
                 # time_limit = datetime.utcnow() + timedelta(seconds=30)
+
                 JOB_ID = scheduler.add_job(func=check_in,
                                            args=[session['name'], session['from_number'],
                                                  session['emergency_number'], resp_txt['check']],
