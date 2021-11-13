@@ -119,9 +119,10 @@ def sms_reply():
                 client.messages.create(
                     body='Hey, this is emergency alert app. ' + session['name'] + ' has set you as an emergency '
                                                                                   'contact. You may receive alert '
-                                                                                  'message from us in the future and '
-                                                                                  'please whitelist our number '
-                                                                                  '(318-536-6330).',
+                                                                                  'message from us in the future so '
+                                                                                  'please add our number '
+                                                                                  '(318-536-6330) with notifications '
+                                                                                  'enabled to your contacts.',
                     from_=TWILIO_NUMBER,
                     to=session['emergency_number'] 
                 )
@@ -173,15 +174,23 @@ def sms_reply():
             print(JOB_ID)
             print(EMERGENCY_JOB)
 
-            # Cancel tasks
-            if JOB_ID is not None:
-                JOB_ID.remove()
-                JOB_ID = None
-            if EMERGENCY_JOB is not None:
-                # FIXME: Currently is not running this part (EMERGENCY_JOB is not properly assigned)
-                print('removing emergency job')
-                EMERGENCY_JOB.remove()
-                EMERGENCY_JOB = None
+            res = req_body.lower()
+            if res != 'done' or res != 'ok':
+                resp_txt = questions[question_id]["text"]["error"]
+                resp.message(resp_txt)
+                log_data_firestore(question_id, log_txt, req_body)
+                session['question_id'] = '4'
+                return str(resp)
+            else:
+                # Cancel tasks
+                if JOB_ID is not None:
+                    JOB_ID.remove()
+                    JOB_ID = None
+                if EMERGENCY_JOB is not None:
+                    # FIXME: Currently is not running this part (EMERGENCY_JOB is not properly assigned)
+                    print('removing emergency job')
+                    EMERGENCY_JOB.remove()
+                    EMERGENCY_JOB = None
 
         # Send a response and log data
         resp.message(resp_txt)

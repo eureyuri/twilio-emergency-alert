@@ -1,20 +1,20 @@
 {
 	"0": {
-		"text": "Hi there, welcome to the EAS - an emergency alert app. To start with, we have two questions. (1/2) What’s your name?",
+		"text": "Hi there, welcome to EAS - an emergency alert app. To start with, we have two questions. (1/2) What’s your name?",
 		"logic": {
 			"exp_ans_type_pos": "text"
 		},
 		"next_question": "1"
 	},
 	"1": {
-		"text": "Thanks for the answer, one more question to go! (2/2) What’s your emergency contact’s phone number that we could reach if you're in danger?",
+		"text": "Thanks for the answer, one more question to go! (2/2) What’s your emergency contact’s phone number that we could reach if you're in danger? We'll let them know that you have added them as your emergency contact.",
 		"logic":{
 			"exp_ans_type_pos": "text"
 		},
 		"next_question": "2"
 	},
 	"2": {
-		"text": "Great, we are ready to go! Please remember to whitelist our number (318-536-6330) and let us know anytime you need to set an alarm! To set an alarm, text us an estimated travel time in the form of xm / xmin / yhxm",
+		"text": "Great, we are ready to go! Please remember to add our number (318-536-6330) with notifications and let us know anytime you need to set an alarm! To set an alarm, text us an estimated travel time in the form of xm / xmin / yhxm",
 		"logic": {
 			"exp_ans_type_pos": "text"
 		},
@@ -22,7 +22,7 @@
 	},
 	"3": {
 		"text": {
-			"resp": "Be safe! The app will check up on you in the set time. If you end your trip earlier, let us know that you are done!",
+			"resp": "Be safe! The app will check up on you in the set time. If you end your trip earlier, let us know that you are \"done\"!",
 			"check": "Your trip is over! Please reply ok within 5 minutes so we know you are okay. Or we will send an alert message to your emergency contact."
 		},
 		"logic": {
@@ -31,7 +31,10 @@
 		"next_question": "4"
 	},
 	"4": {
-		"text": "Thanks for checking in! Text us again for another trip!",
+		"text": {
+			"resp": "Thanks for checking in! Text us again for another trip!",
+			"error": "Sorry we don't understand... Text us \"done\" or \"ok\" if you want to end the trip!"
+		},
 		"next_question": "2"
 	},
 	"-1": {
