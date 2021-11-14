@@ -190,6 +190,7 @@ def sms_reply():
                 # Cancel tasks
                 resp_txt = questions[question_id]["text"]["resp"]
                 if JOB_ID is not None:
+                    print('removing check in job')
                     # JOB_ID.remove()
                     scheduler.remove_job('my_job_id')
                     JOB_ID = None
