@@ -35,7 +35,7 @@
 			"resp": "Thanks for checking in! Text us again for another trip!",
 			"error": "Sorry we don't understand... Text us \"done\" or \"ok\" if you want to end the trip!"
 		},
-		"next_question": "2"
+		"next_question": "3"
 	},
 	"-1": {
 		"text": "Please resend your estimated out time in the format of xm / xmin / yhxm",

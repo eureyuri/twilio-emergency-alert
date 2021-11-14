@@ -175,7 +175,8 @@ def sms_reply():
             print(EMERGENCY_JOB)
 
             res = req_body.lower()
-            if res != 'done' or res != 'ok':
+            print(res)
+            if res != 'done' and res != 'ok':
                 resp_txt = questions[question_id]["text"]["error"]
                 resp.message(resp_txt)
                 log_data_firestore(question_id, log_txt, req_body)
@@ -183,6 +184,7 @@ def sms_reply():
                 return str(resp)
             else:
                 # Cancel tasks
+                resp_txt = questions[question_id]["text"]["resp"]
                 if JOB_ID is not None:
                     JOB_ID.remove()
                     JOB_ID = None
