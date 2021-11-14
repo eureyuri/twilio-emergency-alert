@@ -58,7 +58,8 @@ def check_in(name, to, emergency_number, text):
     EMERGENCY_JOB = scheduler.add_job(func=emergency_notice,
                                       args=[name, to, emergency_number],
                                       trigger="date",
-                                      run_date=time_limit)
+                                      run_date=time_limit,
+                                      id='my_job_id2')
     print('emergency_____')
     print(EMERGENCY_JOB)
 
@@ -160,7 +161,8 @@ def sms_reply():
                                            args=[session['name'], session['from_number'],
                                                  session['emergency_number'], resp_txt['check']],
                                            trigger="date",
-                                           run_date=time_limit)
+                                           run_date=time_limit,
+                                           id='my_job_id')
                 print(JOB_ID)
                 resp_txt = resp_txt['resp']
             # if set time not in right format, send the reminder until get the right info
@@ -188,12 +190,14 @@ def sms_reply():
                 # Cancel tasks
                 resp_txt = questions[question_id]["text"]["resp"]
                 if JOB_ID is not None:
-                    JOB_ID.remove()
+                    # JOB_ID.remove()
+                    scheduler.remove_job('my_job_id')
                     JOB_ID = None
                 if EMERGENCY_JOB is not None:
                     # FIXME: Currently is not running this part (EMERGENCY_JOB is not properly assigned)
                     print('removing emergency job')
-                    EMERGENCY_JOB.remove()
+                    # EMERGENCY_JOB.remove()
+                    scheduler.remove_job('my_job_id2')
                     EMERGENCY_JOB = None
 
         # Send a response and log data
