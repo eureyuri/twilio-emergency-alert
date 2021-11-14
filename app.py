@@ -59,6 +59,8 @@ def check_in(name, to, emergency_number, text):
                                       args=[name, to, emergency_number],
                                       trigger="date",
                                       run_date=time_limit)
+    print('emergency_____')
+    print(EMERGENCY_JOB)
 
 
 def emergency_notice(name, my_number, emergency_number):
