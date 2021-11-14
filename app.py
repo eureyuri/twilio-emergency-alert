@@ -161,6 +161,7 @@ def sms_reply():
                                                  session['emergency_number'], resp_txt['check']],
                                            trigger="date",
                                            run_date=time_limit)
+                print(JOB_ID)
                 resp_txt = resp_txt['resp']
             # if set time not in right format, send the reminder until get the right info
             except (TypeError, ValueError) as e:
